@@ -1,21 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Memory leak test</title>
-  </head>
-  <body>
-    <p>Open console and repeatedly run `test()`. If the printed number (allocated Rust memory keeps increasing, values aren't automatically destroyed and deallocated).</p>
-    <script type="module">
-        import * as wasm from "./pkg/wasmreftest.js";
-        wasm.default().then((internals) => {
-            window.test = function() {
-                for (let i = 0; i < 10; i++) {
-                    console.log(internals.memory.buffer.byteLength);
-                    let a = new wasm.LargeType();
-                }
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Memory leak test</title>
+</head>
+
+<body>
+  <p>Open console and repeatedly run `test()`, which creates 100 LargeType instances which immediately become
+    inaccessible (no references to them are left), and prints current wasm's buffer size after each. All deallocs should
+    also be logged. You can also try `test(true)` to see what happens when .free() is called explicitely after 1s.</p>
+  <script type="module">
+    import * as wasm from "./pkg/wasmreftest.js";
+    wasm.default().then((internals) => {
+      window.test = function (doFree) {
+        const created = [];
+        for (let i = 0; i < 100; i++) {
+          console.log(internals.memory.buffer.byteLength);
+          created.push(new wasm.LargeType());
+        }
+        if (doFree) {
+          setTimeout(() => {
+            for (const x of created) {
+              x.free()
             }
-        });
-    </script>
-  </body>
+          }, 1000)
+        }
+      }
+    });
+  </script>
+</body>
+
 </html>
