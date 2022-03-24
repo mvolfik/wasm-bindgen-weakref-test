@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Memory leak test</title>
+  </head>
+  <body>
+    <p>Open console and repeatedly run `test()`. If the printed number (allocated Rust memory keeps increasing, values aren't automatically destroyed and deallocated).</p>
+    <script type="module">
+        import * as wasm from "./pkg/wasmreftest.js";
+        wasm.default().then((internals) => {
+            window.test = function() {
+                for (let i = 0; i < 10; i++) {
+                    console.log(internals.memory.buffer.byteLength);
+                    let a = new wasm.LargeType();
+                }
+            }
+        });
+    </script>
+  </body>
+</html>
